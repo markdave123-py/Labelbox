@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app import models, schemas
-from app.models import Image
+from app.models import Image, Annotation
+
 import json
 
 def create_project(db: Session, project: schemas.ProjectCreate):
@@ -47,7 +48,25 @@ def create_annotation(db: Session, annotation: schemas.AnnotationCreate):
     return db_annotation
 
 def get_annotations_for_project(db: Session, project_id: int):
-    return (db.query(models.Annotation)
-            .join(models.Image)
-            .filter(models.Image.project_id == project_id)
-            .all())
+    annotations = (
+        db.query(Annotation, Image.image_url)
+        .join(Image, Annotation.image_id == Image.image_id)
+        .filter(Image.project_id == project_id)
+        .all()
+    )
+
+    if not annotations:
+        return []
+
+    # Format response to include annotation data and image URL
+    result = [
+        {
+            "annotation_id": annotation.annotation_id,
+            "image_id": annotation.image_id,
+            "image_url": image_url,
+            "annotation_data": annotation.annotation_data,
+            "created_at": annotation.created_at,
+        }
+        for annotation, image_url in annotations
+    ]
+    return result

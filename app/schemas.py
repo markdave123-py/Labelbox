@@ -33,6 +33,7 @@ class AnnotationCreate(BaseModel):
 class AnnotationOut(BaseModel):
     annotation_id: int
     image_id: int
+    image_url: str
     annotation_data: Any
     created_at: datetime
     class Config:
